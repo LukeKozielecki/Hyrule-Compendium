@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Hyrule Compendium</string>
+    <string name="loading_failed">Failed to load</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading</string>
+    <string name="compendium_image">Compendium Image</string>
+    <string name="compendium_header">Compendium</string>
+</resources>
