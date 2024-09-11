@@ -1,6 +1,8 @@
 package luke.koz.hyrulecompendium.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,12 +15,16 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -39,13 +45,17 @@ import luke.koz.hyrulecompendium.viewmodel.CompendiumUiState
 fun HomeScreen(
     compendiumUiState: CompendiumUiState,
     retryAction: () -> Unit,
+    filterResults: (List<CompendiumItem>, String) -> List<CompendiumItem>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     when (compendiumUiState) {
         is CompendiumUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
         is CompendiumUiState.Success -> ItemsGridScreen(
-            compendiumUiState.compendiumDataList, contentPadding = contentPadding, modifier = modifier.fillMaxWidth()
+            compendiumItem = compendiumUiState.compendiumDataList,
+            filterResults = filterResults,
+            contentPadding = contentPadding,
+            modifier = modifier.fillMaxWidth()
         )
         is CompendiumUiState.Error -> ErrorScreen(retryAction, modifier = modifier.fillMaxSize())
     }
@@ -89,43 +99,64 @@ fun ErrorScreen(retryAction: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun ItemsGridScreen(
     compendiumItem: CompendiumDataList,
+    filterResults: (List<CompendiumItem>, String) -> List<CompendiumItem>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(4.dp),
 ) {
-    Column {
-//        Row (Modifier.fillMaxWidth(), Arrangement.Center){
-//            val filterBtnPaddingModifier = Modifier.padding(horizontal = 4.dp)
-//            Button(onClick = { /*TODO*/ }, modifier = filterBtnPaddingModifier) {
-//                Text(text = "Cr")
-//            }
-//            Button(onClick = { /*TODO*/ }, modifier = filterBtnPaddingModifier) {
-//                Text(text = "Eq")
-//            }
-//            Button(onClick = { /*TODO*/ }, modifier = filterBtnPaddingModifier) {
-//                Text(text = "Ma")
-//            }
-//            Button(onClick = { /*TODO*/ }, modifier = filterBtnPaddingModifier) {
-//                Text(text = "Mo")
-//            }
-//            Button(onClick = { /*TODO*/ }, modifier = filterBtnPaddingModifier) {
-//                Text(text = "Tr")
-//            }
-//        }
-        val filteredData = compendiumItem.data.filter { item -> item.category == "creatures" }
+    Column (modifier.padding(contentPadding)){
+        val currentFilterTerm = remember {
+            mutableStateOf("any")
+        }
+        //val filteredData2 : List<CompendiumItem> = compendiumItem.data.filter { item -> item.category == "creatures" }
+        val filteredData : List<CompendiumItem> = if(currentFilterTerm.value == "any") {
+            compendiumItem.data
+        } else {
+            filterResults(compendiumItem.data,currentFilterTerm.value)
+        }
+        CompendiumDefaultFilters(
+            currentFilterTerm = currentFilterTerm,
+            presetFiltersList = listOf(
+                "any",
+                "creatures",
+                "equipment",
+                "materials",
+                "monsters",
+                "treasure"
+            )
+        )
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
             modifier = modifier
                 .padding(horizontal = 4.dp)
                 .fillMaxWidth(),
-            contentPadding = contentPadding,
+            contentPadding = PaddingValues(0.dp),//this stopped being top element so no longer requires [contentPadding] here
         ) {
-            items(items = filteredData/*compendiumItem.data*/, key = { item -> item.id }) { it ->
+            items(
+                items = filteredData/*compendiumItem.data*/,
+                key = { item -> item.id }) { it ->
                 CompendiumItemCard(
                     compendiumItem = it,
                     modifier = modifier
                         .padding(4.dp)
                         .sizeIn(minWidth = 124.dp, maxWidth = 124.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun CompendiumDefaultFilters(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(4.dp),
+    currentFilterTerm: MutableState<String>,
+    presetFiltersList: List<String>,
+) {
+    val scrollState = rememberScrollState()
+    Row(modifier = Modifier.padding(16.dp).horizontalScroll(scrollState)) {
+        for ((index, buttonLabel) in presetFiltersList.withIndex()) {
+            Button(onClick = { currentFilterTerm.value = presetFiltersList[index] }, Modifier.padding(horizontal = 4.dp)) {
+                Text(text = buttonLabel.replaceFirstChar(Char::titlecase))
             }
         }
     }
@@ -189,6 +220,21 @@ fun ItemsGridScreenPreview() {
                 cooking_effect = null
             )
         ))
-        ItemsGridScreen(mockData)
+        val mockFilterPlaceholder : (List<CompendiumItem>, String) -> List<CompendiumItem> = {
+            mockDataInner, filterTermInner ->
+            mockDataInner.filter { item -> item.category == filterTermInner }
+        }
+        ItemsGridScreen(mockData, filterResults = mockFilterPlaceholder)
+    }
+}
+@SuppressLint("UnrememberedMutableState")
+@Preview(showBackground = true)
+@Composable
+fun CompendiumDefaultFiltersPreview() {
+    HyruleCompendiumTheme {
+        CompendiumDefaultFilters(
+            currentFilterTerm = mutableStateOf(""),
+            presetFiltersList = listOf("creatures", "treasure", "monsters")
+        )
     }
 }

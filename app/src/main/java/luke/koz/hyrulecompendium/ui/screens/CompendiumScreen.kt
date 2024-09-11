@@ -43,6 +43,7 @@ fun CompendiumAppScreen() {
             HomeScreen(
                 compendiumUiState = compendiumViewModel.compendiumUiState,
                 retryAction = compendiumViewModel::getCompendiumItem,
+                filterResults = compendiumViewModel::filterData,
                 contentPadding = it
             )
         }

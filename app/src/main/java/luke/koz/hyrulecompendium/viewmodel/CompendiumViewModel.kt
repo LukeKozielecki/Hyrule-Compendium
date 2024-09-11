@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import luke.koz.hyrulecompendium.CompendiumApplication
 import luke.koz.hyrulecompendium.data.CompendiumRepository
 import luke.koz.hyrulecompendium.model.CompendiumDataList
+import luke.koz.hyrulecompendium.model.CompendiumItem
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -48,6 +49,10 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
                 CompendiumUiState.Error
             }
         }
+    }
+
+    fun filterData(dataList: List<CompendiumItem>, filterTerm : String) : List<CompendiumItem> {
+        return dataList.filter { item -> item.category == filterTerm }
     }
 
     /**
