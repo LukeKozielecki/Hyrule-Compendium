@@ -5,8 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -32,18 +39,24 @@ import luke.koz.hyrulecompendium.viewmodel.CompendiumViewModel
 @Composable
 fun CompendiumAppScreen() {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val compendiumViewModel: CompendiumViewModel = viewModel(factory = CompendiumViewModel.Factory)
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { CompendiumTopAppBar(scrollBehavior = scrollBehavior) }
+        topBar = {
+            CompendiumTopAppBar(
+                scrollBehavior = scrollBehavior,
+                compendiumViewModel = compendiumViewModel
+            )
+        },
     ) {
         Surface(
             modifier = Modifier.fillMaxSize()
         ) {
-            val compendiumViewModel: CompendiumViewModel = viewModel(factory = CompendiumViewModel.Factory)
             HomeScreen(
                 compendiumUiState = compendiumViewModel.compendiumUiState,
+                compendiumViewModel = compendiumViewModel,
                 retryAction = compendiumViewModel::getCompendiumItem,
-                filterResults = compendiumViewModel::filterData,
+                filterResults = compendiumViewModel::filterData, //todo <- this need down the chain to be purged late? moved to viewmodel
                 contentPadding = it
             )
         }
@@ -52,7 +65,7 @@ fun CompendiumAppScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CompendiumTopAppBar(scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier) {
+fun CompendiumTopAppBar(scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier, compendiumViewModel: CompendiumViewModel) {
     CenterAlignedTopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
@@ -66,6 +79,44 @@ fun CompendiumTopAppBar(scrollBehavior: TopAppBarScrollBehavior, modifier: Modif
                 )
             }
         },
+//        navigationIcon = {
+//            IconButton(onClick = { /* do something */ }) {
+//                Icon(
+//                    imageVector = Icons.Filled.Search,
+//                    contentDescription = "Search"
+//                )
+//            }
+//        },
+        actions = {
+            IconButton(onClick = { compendiumViewModel.toggleSortOrder() }) {
+                //todo  this refuses to reload onClick
+                Icon(
+                    imageVector = if(compendiumViewModel.sortDirectionAscending.value){
+                        Icons.Filled.KeyboardArrowDown
+                    } else {
+                        Icons.Filled.KeyboardArrowUp
+                    },
+                    contentDescription = if(compendiumViewModel.sortDirectionAscending.value){
+                        "Sort Button. Sorting Up"
+                    } else {
+                        "Sort Button. Sorting down"
+                    },
+                )
+            }
+            IconButton(onClick = { /* do something */ }) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "Search"
+                )
+            }
+            IconButton(onClick = { /* do something */ }) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Favorites"
+                )
+            }
+        },
+
 //        colors = TopAppBarDefaults.topAppBarColors(
 //            containerColor = MaterialTheme.colorScheme.primaryContainer,
 //            titleContentColor = MaterialTheme.colorScheme.primary,
@@ -78,7 +129,12 @@ fun CompendiumTopAppBar(scrollBehavior: TopAppBarScrollBehavior, modifier: Modif
 @Preview
 @Composable
 private fun CompendiumTopAppBarPreview() {
+    val mockCompendiumViewModel: CompendiumViewModel = viewModel(factory = CompendiumViewModel.Factory)
     HyruleCompendiumTheme {
-        CompendiumTopAppBar(scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior())
+        CompendiumTopAppBar(
+            modifier = Modifier,
+            scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
+            compendiumViewModel = mockCompendiumViewModel
+        )
     }
 }
