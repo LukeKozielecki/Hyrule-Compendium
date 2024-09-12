@@ -152,10 +152,11 @@ fun ItemsGridScreen(
 //            Text ("SEARCH")
 //        }
         Text(text = "currentFilterCategory: "+compendiumViewModel.currentFilterCategory.value)
+        Text(text = "currentSearchKeyPhrase: "+compendiumViewModel.currentSearchKeyPhrase.value)
         Text(text = "selectedCategoryOfInputSearch: "+compendiumViewModel.selectedCategoryOfInputSearch.value)
         TextField(value = text, onValueChange = {
             text = it
-            compendiumViewModel.updateFilterTerm(text)
+            compendiumViewModel.updateSearchKeyPhrase(text)
         },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(

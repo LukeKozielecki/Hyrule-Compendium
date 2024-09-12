@@ -46,6 +46,11 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
      * [CompendiumItem.category], [CompendiumItem.common_locations], etc.
      */
     private val _selectedCategoryOfInputSearch = MutableStateFlow("any")
+    /**
+     * [currentSearchKeyPhrase] is a private variable meant to be used with [filterData] function,
+     * to collect user input in a form of string
+     */
+    private val _currentSearchKeyPhrase = MutableStateFlow("")
     private val _sortDirectionAscending = MutableStateFlow(true)
     private val _filteredData = MutableStateFlow<List<CompendiumItem>>(listOf<CompendiumItem>())
 
@@ -61,6 +66,11 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
      * [CompendiumItem.category], [CompendiumItem.common_locations], etc.
      */
     val selectedCategoryOfInputSearch : StateFlow<String> = _selectedCategoryOfInputSearch
+    /**
+     * [currentSearchKeyPhrase] is an exposed variable meant to be used with [filterData] function,
+     * to collect user input in a form of string
+     */
+    val currentSearchKeyPhrase : StateFlow<String> = _currentSearchKeyPhrase
     val sortDirectionAscending: StateFlow<Boolean> = _sortDirectionAscending
     val filteredData: StateFlow<List<CompendiumItem>> = _filteredData
 
@@ -69,16 +79,26 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     }
 
     fun filterData (compendiumItem: CompendiumDataList) : List<CompendiumItem> {
-        return if (currentFilterCategory.value == "any") {
-            _filteredData.value = compendiumItem.data
-            _filteredData.value
-        } else {
-            filterData(compendiumItem.data,currentFilterCategory.value)
-        }
+//        return if (currentFilterCategory.value == "any") {
+//            _filteredData.value = compendiumItem.data
+//            _filteredData.value
+//        } else {
+//            filterData(
+//                dataList = compendiumItem.data,
+//                filterTerm = currentSearchKeyPhrase.value
+//            )
+//        }
+        return filterData(
+            dataList = compendiumItem.data,
+            filterTerm = currentSearchKeyPhrase.value
+        )
     }
 
     fun updateFilterTerm(newFilterTerm: String) {
         _currentFilterCategory.value = newFilterTerm
+    }
+    fun updateSearchKeyPhrase(newFilterTerm: String) {
+        _currentSearchKeyPhrase.value = newFilterTerm
     }
 
     fun toggleSortOrder() {
@@ -104,10 +124,13 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     fun assignSelectedCategoryOfInputSearch(category : String/* = "category"*/) {
         _selectedCategoryOfInputSearch.value = category
     }
-    fun filterData(dataList: List<CompendiumItem>, filterTerm : String) : List<CompendiumItem> {
-        dataList.filter { item -> item.category == _currentFilterCategory.value }
+    fun filterData(dataList: List<CompendiumItem>, filterTerm : String,) : List<CompendiumItem> {
+        var localList : List<CompendiumItem> = dataList
+        localList = localList.filter {
+            item -> item.category == _currentFilterCategory.value || _currentFilterCategory.value == "any"
+        }
         return when (_selectedCategoryOfInputSearch.value) {
-            "any" -> dataList.filter { item ->
+            "any" -> localList.filter { item ->
                 item.category.contains(filterTerm, ignoreCase = true) ||
                 item.description.contains(filterTerm, ignoreCase = true) ||
                 item.common_locations?.any { location -> location.contains(filterTerm, ignoreCase = true) } == true ||
@@ -116,10 +139,10 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
                 item.cooking_effect?.contains(filterTerm, ignoreCase = true) == true ||
                 (item.edible?.toString() == filterTerm)
             }
-            "category" -> dataList.filter { item -> item.category == filterTerm }
-            "id" -> dataList.filter { item -> item.id == filterTerm.toIntOrNull() }
-            "name" -> dataList.filter { item -> item.name.contains(filterTerm, ignoreCase = true) }
-            else -> dataList.filter { item -> item.category == filterTerm }
+            "category" -> localList.filter { item -> item.category == filterTerm }
+            "id" -> localList.filter { item -> item.id == filterTerm.toIntOrNull() }
+            "name" -> localList.filter { item -> item.name.contains(filterTerm, ignoreCase = true) }
+            else -> localList.filter { item -> item.category == filterTerm }
         }
     }
 
