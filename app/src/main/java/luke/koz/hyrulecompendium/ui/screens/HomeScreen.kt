@@ -135,35 +135,42 @@ fun ItemsGridScreen(
         } else {
             filteredData.sortedByDescending { it.id }
         }
-        CompendiumDefaultFilters(
-            currentFilterTerm = currentFilterTerm,
-            compendiumViewModel = compendiumViewModel,
-            presetFiltersList = listOf(
-                "any",
-                "creatures",
-                "equipment",
-                "materials",
-                "monsters",
-                "treasure"
+        val localIsOpenSearchTools = compendiumViewModel.openSearchTools.collectAsState().value
+        if (localIsOpenSearchTools) {
+            CompendiumDefaultFilters(
+                currentFilterTerm = currentFilterTerm,
+                compendiumViewModel = compendiumViewModel,
+                presetFiltersList = listOf(
+                    "any",
+                    "creatures",
+                    "equipment",
+                    "materials",
+                    "monsters",
+                    "treasure"
+                )
             )
-        )
-        var text by remember { mutableStateOf("") }
+            var text by remember { mutableStateOf("") }
 //        Button(onClick = { compendiumViewModel.updateFilterTerm(text) }) {
 //            Text ("SEARCH")
 //        }
-        Text(text = "currentFilterCategory: "+compendiumViewModel.currentFilterCategory.value)
-        Text(text = "currentSearchKeyPhrase: "+compendiumViewModel.currentSearchKeyPhrase.value)
-        Text(text = "selectedCategoryOfInputSearch: "+compendiumViewModel.selectedCategoryOfInputSearch.value)
-        TextField(value = text, onValueChange = {
-            text = it
-            compendiumViewModel.updateSearchKeyPhrase(text)
-        },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done // Set imeAction to Done
-            ),
+            Text(text = "currentFilterCategory: "+compendiumViewModel.currentFilterCategory.value)
+            Text(text = "currentSearchKeyPhrase: "+compendiumViewModel.currentSearchKeyPhrase.value)
+            Text(text = "selectedCategoryOfInputSearch: "+compendiumViewModel.selectedCategoryOfInputSearch.value)
+            //todo make this recompose ui, atm it does not
+            TextField(
+                value = text,
+                onValueChange = {
+                    text = it
+                    compendiumViewModel.updateSearchKeyPhrase(text)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done // Set imeAction to Done
+                ),
             )
-        SearchCategoryDropdownMenu(searchCategory = compendiumViewModel::assignSelectedCategoryOfInputSearch/*filterData = CompendiumViewModel::filterData*/)
+            SearchCategoryDropdownMenu(searchCategory = compendiumViewModel::assignSelectedCategoryOfInputSearch/*filterData = CompendiumViewModel::filterData*/)
+        }
+
         //this is a grid for the sake of adaptive ui implementation
         LazyVerticalGrid(
             columns = GridCells.Fixed(1), //todo move this to Viewmodel. connect to adaptive layout after it is implemented

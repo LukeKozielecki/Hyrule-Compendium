@@ -74,6 +74,8 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     val sortDirectionAscending: StateFlow<Boolean> = _sortDirectionAscending
     val filteredData: StateFlow<List<CompendiumItem>> = _filteredData
 
+    var openSearchTools = MutableStateFlow(false)
+
     init {
         getCompendiumItem()
     }

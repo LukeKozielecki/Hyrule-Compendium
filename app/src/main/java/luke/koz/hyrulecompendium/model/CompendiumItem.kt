@@ -29,15 +29,20 @@ data class CompendiumItem(
     @SerialName(value = "hearts_recovered") val hearts_recovered: Double? = null,
     @SerialName(value = "properties") val properties: Properties? = null,
     @SerialName(value = "edible") val edible: Boolean? = null,
+    @SerialName(value = "fuse_attack_power") val fuse_attack_power: Int? = null,
 
     )
 
 @Serializable
 data class Properties(
     @SerialName(value = "attack")
-    val attack : Int?,
+    val attack : Int? = null,
     @SerialName(value = "defense")
-    val defense : Int?
+    val defense : Int? = null,
+    @SerialName(value = "effect")
+    val effect : String? = null,
+    @SerialName(value = "type")
+    val type : String? = null,
 )
 
 @Serializable

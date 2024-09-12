@@ -24,6 +24,9 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -67,7 +70,11 @@ fun CompendiumAppScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CompendiumTopAppBar(scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier, compendiumViewModel: CompendiumViewModel) {
+fun CompendiumTopAppBar(
+    scrollBehavior: TopAppBarScrollBehavior,
+    modifier: Modifier = Modifier,
+    compendiumViewModel: CompendiumViewModel
+) {
     val sortDirectionAscending by compendiumViewModel.sortDirectionAscending.collectAsState() //this facilitates reloading icon && state flow not being call within composition
     CenterAlignedTopAppBar(
         scrollBehavior = scrollBehavior,
@@ -106,7 +113,7 @@ fun CompendiumTopAppBar(scrollBehavior: TopAppBarScrollBehavior, modifier: Modif
                     },
                 )
             }
-            IconButton(onClick = { /* do something */ }) {
+            IconButton(onClick = { compendiumViewModel.openSearchTools.value = !compendiumViewModel.openSearchTools.value}) {
                 Icon(
                     imageVector = Icons.Filled.Search,
                     contentDescription = "Search"
