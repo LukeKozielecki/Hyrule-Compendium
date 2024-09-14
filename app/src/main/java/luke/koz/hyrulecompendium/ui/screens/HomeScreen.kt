@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -41,14 +41,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import luke.koz.hyrulecompendium.R
-import luke.koz.hyrulecompendium.model.CompendiumItem
 import luke.koz.hyrulecompendium.model.CompendiumDataList
+import luke.koz.hyrulecompendium.model.CompendiumItem
+import luke.koz.hyrulecompendium.ui.theme.Dimens
 import luke.koz.hyrulecompendium.ui.theme.HyruleCompendiumTheme
 import luke.koz.hyrulecompendium.viewmodel.CompendiumUiState
 import luke.koz.hyrulecompendium.viewmodel.CompendiumViewModel
@@ -58,7 +60,6 @@ fun HomeScreen(
     compendiumUiState: CompendiumUiState,
     compendiumViewModel: CompendiumViewModel,
     retryAction: () -> Unit,
-    filterResults: (List<CompendiumItem>, String) -> List<CompendiumItem>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -67,9 +68,8 @@ fun HomeScreen(
         is CompendiumUiState.Success -> ItemsGridScreen(
             compendiumViewModel = compendiumViewModel,
             compendiumDataList = compendiumUiState.compendiumDataList,
-            filterResults = filterResults,
-            contentPadding = contentPadding,
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth(),
+            contentPadding = contentPadding
         )
         is CompendiumUiState.Error -> ErrorScreen(retryAction, modifier = modifier.fillMaxSize())
     }
@@ -114,82 +114,80 @@ fun ErrorScreen(retryAction: () -> Unit, modifier: Modifier = Modifier) {
 fun ItemsGridScreen(
     compendiumViewModel: CompendiumViewModel,
     compendiumDataList: CompendiumDataList,
-    filterResults: (List<CompendiumItem>, String) -> List<CompendiumItem>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(4.dp),
 ) {
-    Column (modifier.padding(contentPadding)){
-        val currentFilterTerm by compendiumViewModel.currentFilterCategory.collectAsState()
-        val searchCategory by compendiumViewModel.selectedCategoryOfInputSearch.collectAsState()
-        val sortAscending by compendiumViewModel.sortDirectionAscending.collectAsState()
-//        val filteredData : List<CompendiumItem> = if(currentFilterTerm == "any") {
-//            compendiumItem.data
-//        } else {//TODO fix currentFilterTerm
-//            filterResults(compendiumItem.data,currentFilterTerm)
-//        }
-        val filteredData : List<CompendiumItem> = compendiumViewModel.filterData(compendiumDataList)
-//        compendiumViewModel.filterData(compendiumDataList)
-//        val filteredData by compendiumViewModel.filteredData.collectAsState()
-        val sortedData = if (sortAscending) {
-            filteredData.sortedBy { it.id }
-        } else {
-            filteredData.sortedByDescending { it.id }
-        }
-        val localIsOpenSearchTools = compendiumViewModel.openSearchTools.collectAsState().value
-        if (localIsOpenSearchTools) {
-            CompendiumDefaultFilters(
-                currentFilterTerm = currentFilterTerm,
-                compendiumViewModel = compendiumViewModel,
-                presetFiltersList = listOf(
-                    "any",
-                    "creatures",
-                    "equipment",
-                    "materials",
-                    "monsters",
-                    "treasure"
+    Box {
+        val selectedCompendiumItem by compendiumViewModel.selectedCompendiumItemForFullCard.collectAsState()
+        Column(modifier.padding(contentPadding)) {
+            val sortAscending by compendiumViewModel.sortDirectionAscending.collectAsState()
+            val filteredData: List<CompendiumItem> =
+                compendiumViewModel.filterData(compendiumDataList)
+            val sortedData = if (sortAscending) {
+                filteredData.sortedBy { it.id }
+            } else {
+                filteredData.sortedByDescending { it.id }
+            }
+            val localIsOpenSearchTools = compendiumViewModel.openSearchTools.collectAsState().value
+            if (localIsOpenSearchTools) {
+                val currentFilterCategory by compendiumViewModel.currentFilterCategory.collectAsState()
+                Text(text = "Current Filter Category:\n$currentFilterCategory", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = Dimens.paddingSmall))
+                CompendiumDefaultFilters(
+                    compendiumViewModel = compendiumViewModel,
+                    presetFiltersList = listOf(
+                        "any",
+                        "creatures",
+                        "equipment",
+                        "materials",
+                        "monsters",
+                        "treasure"
+                    )
                 )
-            )
-            var text by remember { mutableStateOf("") }
-//        Button(onClick = { compendiumViewModel.updateFilterTerm(text) }) {
-//            Text ("SEARCH")
-//        }
-            Text(text = "currentFilterCategory: "+compendiumViewModel.currentFilterCategory.value)
-            Text(text = "currentSearchKeyPhrase: "+compendiumViewModel.currentSearchKeyPhrase.value)
-            Text(text = "selectedCategoryOfInputSearch: "+compendiumViewModel.selectedCategoryOfInputSearch.value)
-            //todo make this recompose ui, atm it does not
-            TextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    compendiumViewModel.updateSearchKeyPhrase(text)
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Done // Set imeAction to Done
-                ),
-            )
-            SearchCategoryDropdownMenu(searchCategory = compendiumViewModel::assignSelectedCategoryOfInputSearch/*filterData = CompendiumViewModel::filterData*/)
-        }
+                var text by remember { mutableStateOf("") }
+                Column (modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.paddingSmall)
+                    .align(Alignment.CenterHorizontally),
+                    horizontalAlignment = Alignment.CenterHorizontally){
 
-        //this is a grid for the sake of adaptive ui implementation
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(1), //todo move this to Viewmodel. connect to adaptive layout after it is implemented
-            modifier = modifier
-                .padding(horizontal = 4.dp)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(0.dp),//this stopped being top element so no longer requires [contentPadding] here
-        ) {
-            items(
-                items = sortedData,//filteredData,/*compendiumItem.data*/
-                key = { item -> item.id }) { it ->
-                CompendiumItemCard(
-                    compendiumItem = it,
-                    modifier = modifier
-                        .padding(4.dp)
-                        .sizeIn(minWidth = 124.dp, maxWidth = 124.dp)
-                )
+                    val selectedItemSubcategoryOfInputSearch by compendiumViewModel.selectedCategoryOfInputSearch.collectAsState()
+                    Text(text = "Current Item Subcategory Of Input Search:\n$selectedItemSubcategoryOfInputSearch", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    //todo make this recompose ui, atm it does not
+                    SearchCategoryDropdownMenu(searchCategory = compendiumViewModel::assignSelectedCategoryOfInputSearch/*filterData = CompendiumViewModel::filterData*/)
+
+                    val currentSearchKeyPhrase by compendiumViewModel.currentSearchKeyPhrase.collectAsState()
+                    Text(text = "Current Search Key Phrase:\n$currentSearchKeyPhrase", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    InputSearchPhrase(
+                        text = text,
+                        onTextChange = { newText -> text = newText },
+                        compendiumViewModel = compendiumViewModel
+                    )
+
+                }
+            }
+
+            //this is a grid for the sake of adaptive ui implementation
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(1), //todo move this to Viewmodel. connect to adaptive layout after it is implemented
+                modifier = modifier
+                    .padding(horizontal = 4.dp)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(0.dp),//this stopped being top element so no longer requires [contentPadding] here
+            ) {
+                items(
+                    items = sortedData,//filteredData,/*compendiumItem.data*/
+                    key = { item -> item.id }) {
+                    CompendiumItemCard(
+                        compendiumItem = it,
+                        modifier = modifier
+                            .padding(4.dp)
+                            .sizeIn(minWidth = 124.dp, maxWidth = 124.dp),
+                        onClickItemSelect = {compendiumViewModel.updateSelectedCompendiumItemForFullCard(it)}
+                    )
+                }
             }
         }
+        CompendiumItemScreen(compendiumItem = selectedCompendiumItem, contentPadding = contentPadding)
     }
 }
 
@@ -197,12 +195,10 @@ fun ItemsGridScreen(
 fun CompendiumDefaultFilters(
     modifier: Modifier = Modifier,
     compendiumViewModel: CompendiumViewModel,
-    contentPadding: PaddingValues = PaddingValues(4.dp),
-    currentFilterTerm: String,
     presetFiltersList: List<String>,
 ) {
     val scrollState = rememberScrollState()
-    Row(modifier = Modifier
+    Row(modifier = modifier
         .padding(16.dp)
         .horizontalScroll(scrollState)) {
         for ((index, buttonLabel) in presetFiltersList.withIndex()) {
@@ -218,13 +214,15 @@ fun CompendiumDefaultFilters(
 fun SearchCategoryDropdownMenu(modifier: Modifier = Modifier, searchCategory: (String) -> Unit) {
     val categories = listOf("any", "category", "id", "name")
     var expanded by remember { mutableStateOf(false) }
-    var selectedText by remember { mutableStateOf(categories[0]) }
+    var selectedDropdownFilterCategory by remember { mutableStateOf(categories[0]) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(32.dp)
+            .padding(vertical = Dimens.paddingMedium),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(text = "Select Item Category to be searched")
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = {
@@ -232,7 +230,7 @@ fun SearchCategoryDropdownMenu(modifier: Modifier = Modifier, searchCategory: (S
             }
         ) {
             TextField(
-                value = selectedText,
+                value = selectedDropdownFilterCategory,
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -248,7 +246,7 @@ fun SearchCategoryDropdownMenu(modifier: Modifier = Modifier, searchCategory: (S
                         text = { Text(text = category) },
                         onClick = {
                             searchCategory(category)
-                            selectedText = category
+                            selectedDropdownFilterCategory = category
                             expanded = false
                         }
                     )
@@ -259,11 +257,41 @@ fun SearchCategoryDropdownMenu(modifier: Modifier = Modifier, searchCategory: (S
 }
 
 @Composable
-fun CompendiumItemCard(compendiumItem: CompendiumItem, modifier: Modifier = Modifier) {
+fun InputSearchPhrase(
+    modifier: Modifier = Modifier,
+    text: String,
+    onTextChange: (String) -> Unit,
+    compendiumViewModel: CompendiumViewModel
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = Dimens.paddingSmall),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Text(text = "Select continuous search phrase")
+        TextField(
+            value = text,
+            onValueChange = { newText ->
+                onTextChange(newText)
+                compendiumViewModel.updateSearchKeyPhrase(newText)
+            },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CompendiumItemCard(compendiumItem: CompendiumItem, modifier: Modifier = Modifier, onClickItemSelect : () -> Unit) {
     Card(
         modifier = modifier.padding(4.dp),
         shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        onClick = {onClickItemSelect()}
     ) {
         Row {
             AsyncImage(
@@ -275,7 +303,7 @@ fun CompendiumItemCard(compendiumItem: CompendiumItem, modifier: Modifier = Modi
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.padding(4.dp)
             )
-            Column (modifier = Modifier.padding(all = 16.dp, )) {
+            Column (modifier = Modifier.padding(all = 16.dp)) {
                 Text(text = compendiumItem.name.uppercase(), style = MaterialTheme.typography.bodyLarge)
                 Text(text = compendiumItem.id.toString(), style = MaterialTheme.typography.bodyMedium)
             }
@@ -323,8 +351,7 @@ fun ItemsGridScreenPreview() {
         val mockCompendiumViewModel: CompendiumViewModel = viewModel()
         ItemsGridScreen(
             compendiumViewModel = mockCompendiumViewModel,
-            compendiumDataList = mockData,
-            filterResults = mockFilterPlaceholder
+            compendiumDataList = mockData
         )
     }
 }
@@ -335,7 +362,6 @@ fun CompendiumDefaultFiltersPreview() {
     val mockCompendiumViewModel: CompendiumViewModel = viewModel(factory = CompendiumViewModel.Factory)
     HyruleCompendiumTheme {
         CompendiumDefaultFilters(
-            currentFilterTerm = "",
             compendiumViewModel = mockCompendiumViewModel,
             presetFiltersList = listOf("creatures", "treasure", "monsters")
         )

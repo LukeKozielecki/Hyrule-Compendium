@@ -23,8 +23,8 @@ import java.io.IOException
  */
 sealed interface CompendiumUiState {
     data class Success(val compendiumDataList: CompendiumDataList) : CompendiumUiState
-    object Error : CompendiumUiState
-    object Loading : CompendiumUiState
+    data object Error : CompendiumUiState
+    data object Loading : CompendiumUiState
 }
 
 class CompendiumViewModel(private val compendiumItemRepository: CompendiumRepository) : ViewModel() {
@@ -52,7 +52,10 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
      */
     private val _currentSearchKeyPhrase = MutableStateFlow("")
     private val _sortDirectionAscending = MutableStateFlow(true)
-    private val _filteredData = MutableStateFlow<List<CompendiumItem>>(listOf<CompendiumItem>())
+    private val _filteredData = MutableStateFlow<List<CompendiumItem>>(listOf())
+
+
+    private val _selectedCompendiumItemForFullCard = MutableStateFlow<CompendiumItem?>(null)
 
     /**
      * [currentFilterCategory] is an exposed variable meant to be used with [updateFilterTerm] function,
@@ -73,6 +76,8 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     val currentSearchKeyPhrase : StateFlow<String> = _currentSearchKeyPhrase
     val sortDirectionAscending: StateFlow<Boolean> = _sortDirectionAscending
     val filteredData: StateFlow<List<CompendiumItem>> = _filteredData
+    val selectedCompendiumItemForFullCard: StateFlow<CompendiumItem?> = _selectedCompendiumItemForFullCard
+
 
     var openSearchTools = MutableStateFlow(false)
 
@@ -106,6 +111,14 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     fun toggleSortOrder() {
         _sortDirectionAscending.value = !_sortDirectionAscending.value
     }
+
+    fun updateSelectedCompendiumItemForFullCard(newFilterTerm: CompendiumItem?) {
+        _selectedCompendiumItemForFullCard.value = newFilterTerm
+    }
+    fun clearSelectedCompendiumItemForFullCard() {
+        _selectedCompendiumItemForFullCard.value = null
+    }
+
     /**
      * Gets [CompendiumDataList] information from the Retrofit [CompendiumApiService] and updates the
      * [CompendiumDataList].
@@ -126,7 +139,7 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     fun assignSelectedCategoryOfInputSearch(category : String/* = "category"*/) {
         _selectedCategoryOfInputSearch.value = category
     }
-    fun filterData(dataList: List<CompendiumItem>, filterTerm : String,) : List<CompendiumItem> {
+    private fun filterData(dataList: List<CompendiumItem>, filterTerm: String) : List<CompendiumItem> {
         var localList : List<CompendiumItem> = dataList
         localList = localList.filter {
             item -> item.category == _currentFilterCategory.value || _currentFilterCategory.value == "any"

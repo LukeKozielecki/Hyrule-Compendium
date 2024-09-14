@@ -3,6 +3,7 @@ package luke.koz.hyrulecompendium.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,7 +19,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import luke.koz.hyrulecompendium.R
@@ -27,18 +27,29 @@ import luke.koz.hyrulecompendium.model.CompendiumItem
 import luke.koz.hyrulecompendium.model.Properties
 import luke.koz.hyrulecompendium.ui.theme.Dimens
 import luke.koz.hyrulecompendium.ui.theme.HyruleCompendiumTheme
-import luke.koz.hyrulecompendium.viewmodel.CompendiumViewModel
 
+/**
+ * How does it work: this composable displays a single compendium item.
+ * Said item is displayed on top of the list, not utilizing navHost
+ *
+ * Why was it implemented like this: Nav host does not natively facilitate custom complex objects inside
+ * of itself. This implementation is admittedly not good, but it works and stops n'th
+ * hour of figuring out how to get serializable data class objects to be passed in NavHost.
+ *
+ * todo: rework sometimeSoon™
+ */
 @Composable
-fun CompendiumItemScreen(modifier: Modifier = Modifier, compendiumItem: CompendiumItem) {
-    Box(modifier = modifier){
-        Image(
-            painter = painterResource(id = R.drawable.zelda_dark_backgorund),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = modifier.fillMaxSize()
-        )
-        CompendiumSelectedItemCard(compendiumItem = compendiumItem)
+fun CompendiumItemScreen(modifier: Modifier = Modifier, compendiumItem: CompendiumItem? = null, contentPadding: PaddingValues = PaddingValues(0.dp)) {
+    if (compendiumItem != null) {
+        Box(modifier = modifier.padding(paddingValues = contentPadding)){
+            Image(
+                painter = painterResource(id = R.drawable.zelda_dark_backgorund),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = modifier.fillMaxSize()
+            )
+            CompendiumSelectedItemCard(compendiumItem = compendiumItem)
+        }
     }
 }
 
