@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -63,15 +65,27 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    when (compendiumUiState) {
-        is CompendiumUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
-        is CompendiumUiState.Success -> ItemsGridScreen(
-            compendiumViewModel = compendiumViewModel,
-            compendiumDataList = compendiumUiState.compendiumDataList,
-            modifier = modifier.fillMaxWidth(),
-            contentPadding = contentPadding
+    Box {
+        Image(
+            painter = painterResource(id = R.drawable.zelda_dark_backgorund),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = modifier.fillMaxSize()
         )
-        is CompendiumUiState.Error -> ErrorScreen(retryAction, modifier = modifier.fillMaxSize())
+        when (compendiumUiState) {
+            is CompendiumUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
+            is CompendiumUiState.Success -> ItemsGridScreen(
+                compendiumViewModel = compendiumViewModel,
+                compendiumDataList = compendiumUiState.compendiumDataList,
+                modifier = modifier.fillMaxWidth(),
+                contentPadding = contentPadding
+            )
+
+            is CompendiumUiState.Error -> ErrorScreen(
+                retryAction,
+                modifier = modifier.fillMaxSize()
+            )
+        }
     }
 }
 
@@ -131,7 +145,9 @@ fun ItemsGridScreen(
             val localIsOpenSearchTools = compendiumViewModel.openSearchTools.collectAsState().value
             if (localIsOpenSearchTools) {
                 val currentFilterCategory by compendiumViewModel.currentFilterCategory.collectAsState()
-                Text(text = "Current Filter Category:\n$currentFilterCategory", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = Dimens.paddingSmall))
+                Text(text = "Current Filter Category:\n$currentFilterCategory", textAlign = TextAlign.Center, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Dimens.paddingSmall))
                 CompendiumDefaultFilters(
                     compendiumViewModel = compendiumViewModel,
                     presetFiltersList = listOf(
@@ -302,6 +318,8 @@ fun CompendiumItemCard(compendiumItem: CompendiumItem, modifier: Modifier = Modi
                 contentDescription = stringResource(R.string.compendium_image),
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.padding(4.dp)
+                    .size(124.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
             Column (modifier = Modifier.padding(all = 16.dp)) {
                 Text(text = compendiumItem.name.uppercase(), style = MaterialTheme.typography.bodyLarge)

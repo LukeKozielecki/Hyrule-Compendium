@@ -42,7 +42,7 @@ fun CompendiumAppScreen() {
         topBar = {
             CompendiumTopAppBar(
                 scrollBehavior = scrollBehavior,
-                compendiumViewModel = compendiumViewModel
+                compendiumViewModel = compendiumViewModel,
             )
         },
     ) {
