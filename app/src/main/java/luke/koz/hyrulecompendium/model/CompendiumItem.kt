@@ -30,7 +30,6 @@ data class CompendiumItem(
     @SerialName(value = "properties") val properties: Properties? = null,
     @SerialName(value = "edible") val edible: Boolean? = null,
     @SerialName(value = "fuse_attack_power") val fuse_attack_power: Int? = null,
-
     )
 
 @Serializable
@@ -47,5 +46,7 @@ data class Properties(
 
 @Serializable
 data class CompendiumDataList(
-    val data: List<CompendiumItem>
+    val data: List<CompendiumItem>,
+    @SerialName(value = "message") val message : String? = null,
+    @SerialName(value = "status") val status : Int? = null
 )
