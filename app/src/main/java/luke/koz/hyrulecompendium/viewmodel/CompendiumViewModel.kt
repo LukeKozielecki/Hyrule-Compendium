@@ -28,6 +28,7 @@ sealed interface CompendiumUiState {
 }
 
 class CompendiumViewModel(private val compendiumItemRepository: CompendiumRepository) : ViewModel() {
+
     /** The mutable State that stores the status of the most recent request */
     var compendiumUiState: CompendiumUiState by mutableStateOf(CompendiumUiState.Loading)
         private set
@@ -38,6 +39,7 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
      * [CompendiumItem.category]
      */
     private val _currentFilterCategory = MutableStateFlow("any")
+
     //todo [currentFilterCategory]
     //  is accessed both by textField and buttons. separate && create _currentSearchKeyPhrase
     /**
@@ -46,6 +48,7 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
      * [CompendiumItem.category], [CompendiumItem.common_locations], etc.
      */
     private val _selectedCategoryOfInputSearch = MutableStateFlow("any")
+
     /**
      * [currentSearchKeyPhrase] is a private variable meant to be used with [filterData] function,
      * to collect user input in a form of string
@@ -108,6 +111,10 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
         _currentSearchKeyPhrase.value = newFilterTerm
     }
 
+    /**
+     * Toggles the boolean state of the sorting direction.
+     * If currently ascending, it will switch to descending and vice versa.
+     */
     fun toggleSortOrder() {
         _sortDirectionAscending.value = !_sortDirectionAscending.value
     }
@@ -115,13 +122,19 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     fun updateSelectedCompendiumItemForFullCard(newFilterTerm: CompendiumItem?) {
         _selectedCompendiumItemForFullCard.value = newFilterTerm
     }
+
+    /**
+     * Clears the currently selected compendium item from the full card view.
+     * Sets the selected item state to null.
+     */
     fun clearSelectedCompendiumItemForFullCard() {
         _selectedCompendiumItemForFullCard.value = null
     }
 
     /**
-     * Gets [CompendiumDataList] information from the Retrofit [CompendiumApiService] and updates the
-     * [CompendiumDataList].
+     * Fetches [CompendiumDataList] from the repository and updates the UI state accordingly.
+     * Handles IOException and HttpException to manage connectivity issues or server errors.
+     * On failure, sets the UI state to [CompendiumUiState.Error].
      */
     fun getCompendiumItem() {
         viewModelScope.launch {
@@ -139,6 +152,13 @@ class CompendiumViewModel(private val compendiumItemRepository: CompendiumReposi
     fun assignSelectedCategoryOfInputSearch(category : String/* = "category"*/) {
         _selectedCategoryOfInputSearch.value = category
     }
+
+    /**
+     * Filters the provided list of [CompendiumItem] based on the specified search term.
+     * @param dataList List of compendium items to filter.
+     * @param filterTerm The search term used for filtering items.
+     * @return A filtered list of [CompendiumItem] that match the criteria.
+     */
     private fun filterData(dataList: List<CompendiumItem>, filterTerm: String) : List<CompendiumItem> {
         var localList : List<CompendiumItem> = dataList
         localList = localList.filter {
