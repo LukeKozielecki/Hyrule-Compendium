@@ -1,7 +1,6 @@
-package luke.koz.hyrulecompendium.ui.screens
+package luke.koz.hyrulecompendium.utils.screens
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -14,8 +13,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -23,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,34 +27,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import luke.koz.hyrulecompendium.R
 import luke.koz.hyrulecompendium.ui.theme.HyruleCompendiumTheme
 import luke.koz.hyrulecompendium.viewmodel.CompendiumViewModel
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CompendiumAppScreen() {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val compendiumViewModel: CompendiumViewModel = viewModel(factory = CompendiumViewModel.Factory)
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            CompendiumTopAppBar(
-                scrollBehavior = scrollBehavior,
-                compendiumViewModel = compendiumViewModel,
-            )
-        },
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            HomeScreen(
-                compendiumUiState = compendiumViewModel.compendiumUiState,
-                compendiumViewModel = compendiumViewModel,
-                retryAction = compendiumViewModel::getCompendiumItem,
-                //todo <- this need down the chain to be purged late? moved to viewmodel
-                contentPadding = it
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
