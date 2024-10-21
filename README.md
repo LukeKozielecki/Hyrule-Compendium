@@ -96,4 +96,7 @@ class NetworkCompendiumRepository(
 }
 
 ```
+## Demonstation
+
+![hyrule_compedium_features](https://github.com/user-attachments/assets/2cc55c42-549b-4bc2-a42f-20cd6d638d08)
 
